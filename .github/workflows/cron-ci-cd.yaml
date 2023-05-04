@@ -1,0 +1,22 @@
+name: Hourly Workflow
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+
+jobs:
+  hourly-job:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Get Latest Release Tag workflow
+        uses: paulopiriquito/cron-releases@master
+        with:
+          owner: ${{ github.repository_owner }}
+          repo: ${{ github.event.repository.name }}
+        id: latest-tag
+      - name: Use latest release tag
+        if: steps.latest-tag.outputs.found == 'true'
+        run: echo "The latest release tag is ${{ steps.latest-tag.outputs.tag }}"
+      - name: Handle error
+        if: steps.latest-tag.outputs.found == 'false'
+        run: echo "Error calling GitHub API or latest release tag is null or empty"
