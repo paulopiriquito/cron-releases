@@ -1,0 +1,42 @@
+name: Get Latest Release Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      owner:
+        description: 'Owner of the GitHub repository'
+        required: true
+      repo:
+        description: 'Name of the GitHub repository'
+        required: true
+
+jobs:
+  get-latest-release-tag:
+    runs-on: ubuntu-latest
+    outputs:
+      release-tag: ${{ steps.get-tag.outputs.tag }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Get latest release tag
+        id: get-tag
+        uses: actions/github-script@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const owner = "${{ github.event.inputs.owner }}";
+            const repo = "${{ github.event.inputs.repo }}";
+            const query = `
+              query {
+                repository(owner: "${owner}", name: "${repo}") {
+                  latestRelease {
+                    tagName
+                  }
+                }
+              }
+            `;
+            const result = await github.graphql(query);
+            console.log(result.repository.latestRelease.tagName);
+            return { tag: result.repository.latestRelease.tagName };
+    outputs:
+      release-tag: ${{ steps.get-tag.outputs.tag }}
