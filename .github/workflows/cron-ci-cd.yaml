@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Get Latest Release Tag workflow
-        uses: paulopiriquito/cron-releases@master
+        uses: paulopiriquito/cron-releases/.github/workflows/get-latest-release-tag.yml@master
         with:
           owner: ${{ github.repository_owner }}
           repo: ${{ github.event.repository.name }}
