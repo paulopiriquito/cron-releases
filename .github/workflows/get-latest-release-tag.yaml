@@ -14,7 +14,8 @@ jobs:
   get-latest-release-tag:
     runs-on: ubuntu-latest
     outputs:
-      release-tag: ${{ steps.get-tag.outputs.tag }}
+      tag: ${{ steps.get-tag.outputs.tag }}
+      found: ${{ steps.check-tag.outputs.found }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
@@ -35,8 +36,19 @@ jobs:
                 }
               }
             `;
-            const result = await github.graphql(query);
-            console.log(result.repository.latestRelease.tagName);
-            return { tag: result.repository.latestRelease.tagName };
-    outputs:
-      release-tag: ${{ steps.get-tag.outputs.tag }}
+            try {
+              const result = await github.graphql(query);
+              const tag = result.repository.latestRelease.tagName;
+              if (!tag) {
+                console.log('Latest release tag is null or empty');
+                return { tag: '', found: false };
+              }
+              console.log(`Latest release tag: ${tag}`);
+              return { tag: tag, found: true };
+            } catch (error) {
+              console.log(`Error calling GitHub API: ${error}`);
+              return { tag: '', found: false };
+            }
+      - name: Check if tag was found
+        id: check-tag
+        run: echo ::set-output name=found::${{ steps.get-tag.outputs.found }}
