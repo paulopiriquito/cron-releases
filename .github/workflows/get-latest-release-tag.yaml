@@ -12,12 +12,20 @@ on:
         required: true
         type: string
 
+    outputs:
+      found:
+        description: "true if a release tag was found"
+        value: ${{ jobs.get-latest-release-tag.outputs.found }}
+      tag:
+        description: "latest release tag name"
+        value: ${{ jobs.get-latest-release-tag.outputs.tag }}
+
 jobs:
   get-latest-release-tag:
     runs-on: ubuntu-latest
 
     outputs:
-      tag: ${{ steps.get-tag.outputs.tag }}
+      tag: ${{ steps.set-tag.outputs.tag }}
       found: ${{ steps.check-tag.outputs.found }}
 
     steps:
@@ -54,4 +62,7 @@ jobs:
 
       - name: Check if tag was found
         id: check-tag
-        run: echo ::set-output name=found::${{ steps.get-tag.outputs.found }}
+        run: echo "found=${{ fromJSON(steps.get-tag.outputs.result).found }}" >> $GITHUB_OUTPUT
+      - name: Set tag
+        id: set-tag
+        run: echo "tag=${{ fromJSON(steps.get-tag.outputs.result).tag }}" >> $GITHUB_OUTPUT

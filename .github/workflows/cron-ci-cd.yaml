@@ -11,3 +11,12 @@ jobs:
     with:
         owner: ${{ github.repository_owner }}
         repo: ${{ github.event.repository.name }}
+  checkout-release:
+    runs-on: ubuntu-latest
+    needs: [hourly-job]
+    if: needs.hourly-job.outputs.found == 'true'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.hourly-job.outputs.tag }}
