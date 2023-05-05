@@ -30,8 +30,8 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const owner = "${{ github.event.inputs.owner }}";
-            const repo = "${{ github.event.inputs.repo }}";
+            const owner = "${{ inputs.owner }}";
+            const repo = "${{ inputs.repo }}";
             const query = `
               query {
                 repository(owner: "${owner}", name: "${repo}") {
