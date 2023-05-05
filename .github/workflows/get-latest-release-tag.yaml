@@ -1,7 +1,7 @@
 name: Get Latest Release Tag
 
 on:
-  workflow_dispatch:
+  workflow_call:
     inputs:
       owner:
         description: 'Owner of the GitHub repository'
