@@ -6,9 +6,11 @@ on:
       owner:
         description: 'Owner of the GitHub repository'
         required: true
+        type: string
       repo:
         description: 'Name of the GitHub repository'
         required: true
+        type: string
 
 jobs:
   get-latest-release-tag:
