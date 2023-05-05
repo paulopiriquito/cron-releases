@@ -13,12 +13,15 @@ on:
 jobs:
   get-latest-release-tag:
     runs-on: ubuntu-latest
+
     outputs:
       tag: ${{ steps.get-tag.outputs.tag }}
       found: ${{ steps.check-tag.outputs.found }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+
       - name: Get latest release tag
         id: get-tag
         uses: actions/github-script@v4
@@ -49,6 +52,7 @@ jobs:
               console.log(`Error calling GitHub API: ${error}`);
               return { tag: '', found: false };
             }
+
       - name: Check if tag was found
         id: check-tag
         run: echo ::set-output name=found::${{ steps.get-tag.outputs.found }}
