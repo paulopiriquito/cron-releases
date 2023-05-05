@@ -21,9 +21,6 @@ jobs:
       found: ${{ steps.check-tag.outputs.found }}
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
-
       - name: Get latest release tag
         id: get-tag
         uses: actions/github-script@v4
