@@ -6,15 +6,73 @@ on:
     - cron: '0 * * * *'
 
 jobs:
-  hourly-job:
+  find-scheduled-release:
     uses: paulopiriquito/cron-releases/.github/workflows/get-latest-release-tag.yaml@master
     with:
         owner: ${{ github.repository_owner }}
         repo: ${{ github.event.repository.name }}
+  set-git-ref:
+    runs-on: ubuntu-latest
+    needs:
+      - find-scheduled-release
+    outputs:
+      use-ref: ${{ steps.find-git-ref.outputs.git-ref }}
+    steps:
+      - name: Set current ref if is not scheduled
+        id: find-git-ref
+        run: |-
+          if [ ${{ github.event.name }} == 'schedule' && ${{ needs.find-scheduled-release.outputs.found }} == 'true']; then
+            echo "git-ref=refs/tags/${{ needs.find-scheduled-release.outputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "git-ref=${{ github.ref }}" >> $GITHUB_OUTPUT
+  check-tag:
+    name: Check Build-Release Tags
+    runs-on: ubuntu-latest
+    needs:
+      - set-git-ref
+    outputs:
+      run_qua_uat_prep_jobs: ${{ steps.check-qua-uat-prep-tag.outputs.run_qua_uat_prep_jobs }}
+      run_prd_jobs: ${{ steps.check-prd-tag.outputs.run_prd_jobs }}
+      DOCKER_REGISTRY: ${{ steps.registry.outputs.DOCKER_REGISTRY }}
+    steps:
+      # Check QA UAT PREP Tag
+      - name: Check QA/UAT/PREP Tag ${{ needs.set-git-ref.outputs.use-ref }}
+        id: check-qua-uat-prep-tag
+        run: |-
+          if [[ ${{ needs.set-git-ref.outputs.use-ref }} =~ ^refs\/tags\/v[0-9]+\.[0-9]+\.[0-9]+\-rc\.[0-9]+ ]]; then
+            echo "This tag will be used for QA/UAT/PREP"
+            echo "run_qua_uat_prep_jobs=true" >> $GITHUB_OUTPUT
+            echo "DOCKER_REGISTRY=dev" >> $GITHUB_ENV
+          else
+            echo "This tag will NOT be used for QA/UAT/PREP"
+            echo "run_qua_uat_prep_jobs=false" >> $GITHUB_OUTPUT
+            echo "DOCKER_REGISTRY=dev" >> $GITHUB_ENV
+          fi
+
+      # Check PROD Tag
+      - name: Check Prod Tag ${{ needs.set-git-ref.outputs.use-ref }}
+        id: check-prd-tag
+        run: |-
+          if [[ ${{ needs.set-git-ref.outputs.use-ref }} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "This tag will be used for PROD"
+            echo "run_prd_jobs=true" >> $GITHUB_OUTPUT
+            echo "DOCKER_REGISTRY=rc" >> $GITHUB_ENV
+          else
+            echo "This tag will NOT be used for PROD"
+            echo "run_prd_jobs=false" >> $GITHUB_OUTPUT
+            echo "DOCKER_REGISTRY=rc" >> $GITHUB_ENV
+          fi
+
+      - name: Check Registry to use
+        id: registry
+        run: |-
+          echo "DOCKER_REGISTRY=$DOCKER_REGISTRY" >> $GITHUB_OUTPUT
   checkout-release:
     runs-on: ubuntu-latest
-    needs: [hourly-job]
-    if: needs.hourly-job.outputs.found == 'true'
+    needs:
+      - set-git-ref
+      - check-tag
+    if: needs.check-tag.outputs.
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
