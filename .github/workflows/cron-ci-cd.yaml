@@ -21,7 +21,7 @@ jobs:
       - name: Set current ref if is not scheduled
         id: find-git-ref
         run: |-
-          if [ ${{ github.event.name }} == 'schedule' && ${{ needs.find-scheduled-release.found }} == 'true']; then
+          if [ ${{ github.event.name }} == 'schedule' && ${{ needs.find-scheduled-release.outputs.found }} == 'true']; then
             echo "git-ref=refs/tags/${{ needs.find-scheduled-release.outputs.tag }}" >> $GITHUB_OUTPUT
           else
             echo "git-ref=${{ github.ref }}" >> $GITHUB_OUTPUT
@@ -72,9 +72,9 @@ jobs:
     needs:
       - set-git-ref
       - check-tag
-    if: needs.check-tag.outputs.
+    if: needs.check-tag.outputs.run_qua_uat_prep_jobs == 'true'
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
-          ref: ${{ needs.hourly-job.outputs.tag }}
+          ref: ${{ needs.set-git-ref.outputs.use-ref }}
