@@ -16,17 +16,16 @@ jobs:
     needs:
       - find-scheduled-release
     outputs:
-      use-ref: ${{ steps.find-git-ref.outputs.git-ref }}
+      use-ref: ${{ steps.find-git-ref.outputs.result }}
     steps:
       - name: Set current ref if is not scheduled
         id: find-git-ref
         run: |-
           if [ "${{ github.event_name }}" == "schedule" ] && [ "${{ needs.find-scheduled-release.outputs.found }}" == "true" ] ; then
-            echo "git-ref=refs/tags/${{ needs.find-scheduled-release.outputs.tag }}" >> $GITHUB_ENV
+            echo "refs/tags/${{ needs.find-scheduled-release.outputs.tag }}"
           else
-            echo "git-ref=${{ github.ref }}" >> $GITHUB_ENV
+            echo "${{ github.ref }}"
           fi
-      - run: echo ${{ steps.find-git-ref.outputs.git-ref }}
   check-tag:
     name: Check Build-Release Tags
     runs-on: ubuntu-latest
