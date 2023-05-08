@@ -21,7 +21,7 @@ jobs:
       - name: Set current ref if is not scheduled
         id: find-git-ref
         run: |-
-          if ["${{ github.event_name }}" == "schedule"] && [ "${{ needs.find-scheduled-release.outputs.found }}]" == "true" ; then
+          if [ "${{ github.event_name }}" == "schedule" ] && [ "${{ needs.find-scheduled-release.outputs.found }}" == "true" ] ; then
             echo "git-ref=refs/tags/${{ needs.find-scheduled-release.outputs.tag }}"
           else
             echo "git-ref=${{ github.ref }}"
