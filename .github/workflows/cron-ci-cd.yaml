@@ -3,7 +3,7 @@ name: Hourly Workflow
 on:
   workflow_dispatch:
   schedule:
-    - cron: '0 * * * *'
+    - cron: '*/5 * * * *'
 
 jobs:
   find-scheduled-release:
@@ -21,10 +21,12 @@ jobs:
       - name: Set current ref if is not scheduled
         id: find-git-ref
         run: |-
-          if [ ${{ github.event.name }} == 'schedule' && ${{ needs.find-scheduled-release.outputs.found }} == 'true']; then
+          if ('${{ github.event_name }}' == 'schedule' && ${{ needs.find-scheduled-release.outputs.found }}); then
             echo "git-ref=refs/tags/${{ needs.find-scheduled-release.outputs.tag }}" >> $GITHUB_OUTPUT
           else
             echo "git-ref=${{ github.ref }}" >> $GITHUB_OUTPUT
+          fi
+      - run: echo ${{ steps.find-git-ref.outputs.git-ref }}
   check-tag:
     name: Check Build-Release Tags
     runs-on: ubuntu-latest
@@ -36,7 +38,7 @@ jobs:
       DOCKER_REGISTRY: ${{ steps.registry.outputs.DOCKER_REGISTRY }}
     steps:
       # Check QA UAT PREP Tag
-      - name: Check QA/UAT/PREP Tag ${{ needs.set-git-ref.outputs.use-ref }}
+      - name: Check QA/UAT/PREP ${{ needs.set-git-ref.outputs.use-ref }}
         id: check-qua-uat-prep-tag
         run: |-
           if [[ ${{ needs.set-git-ref.outputs.use-ref }} =~ ^refs\/tags\/v[0-9]+\.[0-9]+\.[0-9]+\-rc\.[0-9]+ ]]; then
@@ -50,7 +52,7 @@ jobs:
           fi
 
       # Check PROD Tag
-      - name: Check Prod Tag ${{ needs.set-git-ref.outputs.use-ref }}
+      - name: Check Prod ${{ needs.set-git-ref.outputs.use-ref }}
         id: check-prd-tag
         run: |-
           if [[ ${{ needs.set-git-ref.outputs.use-ref }} =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
@@ -60,7 +62,7 @@ jobs:
           else
             echo "This tag will NOT be used for PROD"
             echo "run_prd_jobs=false" >> $GITHUB_OUTPUT
-            echo "DOCKER_REGISTRY=rc" >> $GITHUB_ENV
+            echo "DOCKER_REGISTRY=dev" >> $GITHUB_ENV
           fi
 
       - name: Check Registry to use
@@ -72,7 +74,7 @@ jobs:
     needs:
       - set-git-ref
       - check-tag
-    if: needs.check-tag.outputs.run_qua_uat_prep_jobs == 'true'
+    if: needs.check-tag.outputs.run_prd_jobs == 'true'
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
