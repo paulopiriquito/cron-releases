@@ -37,6 +37,7 @@ jobs:
       run_prd_jobs: ${{ steps.check-prd-tag.outputs.run_prd_jobs }}
       DOCKER_REGISTRY: ${{ steps.registry.outputs.DOCKER_REGISTRY }}
     steps:
+      - run: echo ${{ needs.set-git-ref.outputs.use-ref }}
       # Check QA UAT PREP Tag
       - name: Check QA/UAT/PREP ${{ needs.set-git-ref.outputs.use-ref }}
         id: check-qua-uat-prep-tag
